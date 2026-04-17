@@ -238,7 +238,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
-              onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+              onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
               child: _buildNavItem(context, Icons.grid_view, 'Home', false),
             ),
             GestureDetector(

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/stock_lite_button.dart';
 import '../widgets/stock_lite_input.dart';
+import '../services/local_storage_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +20,23 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEmail();
+  }
+
+  Future<void> _loadSavedEmail() async {
+    final savedEmail = await LocalStorageService().getLastEmail();
+    if (savedEmail != null && savedEmail.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _emailController.text = savedEmail;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -30,6 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+      
+      // Save email locally for next time (satisfies local data requirement)
+      await LocalStorageService().saveLastEmail(_emailController.text.trim());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

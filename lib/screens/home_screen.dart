@@ -12,40 +12,10 @@ class HomeScreen extends StatelessWidget {
     final dbService = Provider.of<DatabaseService>(context);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // TopAppBar
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.white.withOpacity(0.8),
-            surfaceTintColor: Colors.transparent,
-            title: Row(
-              children: [
-                Icon(Icons.inventory_2, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 8),
-                Text(
-                  'StockLite',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                ),
-              ],
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuAJey01j5bp5u3z6fkLGTwghIMsyQs-XbNjER3qjMdtgpK7dHc4ZjtD9fFKuiX0UwxH47kQn1sMzJwMW9K3jcpC8wgBzHRqykCU3kIPnG8j12cNkIINPrAyvIBppzdZI8K3Bx3_NbUF_P5C3MZskGD9kcgCfRWa2o8qCUfxfNI4HyDhMfHLX5-eDW8XGH9TWoTkbkn66CUHUu9byi2oo8jJIpcec2P5O5R4494OwLJU4SLt4ooM8q0wjTyn_SbZyh0M2VewlmCiJ5c',
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Header & Search
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // Header & Search
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: SliverList(
@@ -147,7 +117,8 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
@@ -171,7 +142,7 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
-              onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+              onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
               child: _buildNavItem(context, Icons.grid_view, 'Home', true),
             ),
             GestureDetector(

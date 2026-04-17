@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../services/local_storage_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -116,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
                             ),
                           ),
                           _buildMenuItem(Icons.manage_accounts, 'Account Settings', 'Security, password, and privacy'),
-                          _buildMenuItem(Icons.notifications_none, 'Notifications', 'Stock alerts and system updates'),
+                          const _NotificationMenuItem(),
                           _buildMenuItem(Icons.help_outline, 'Help Center', 'Documentation and support'),
                         ],
                       ).animate().fadeIn(delay: 500.ms),
@@ -127,7 +128,12 @@ class ProfileScreen extends StatelessWidget {
                       const Divider(color: Color(0xFFEDEEEF)),
                       const SizedBox(height: 24),
                       TextButton.icon(
-                        onPressed: () => authService.signOut(),
+                        onPressed: () async {
+                          await authService.signOut();
+                          if (context.mounted) {
+                            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                          }
+                        },
                         icon: const Icon(Icons.logout, color: Color(0xFFBA1A1A)),
                         label: const Text(
                           'Sign Out',
@@ -169,7 +175,7 @@ class ProfileScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
-              onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+              onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
               child: _buildNavItem(context, Icons.grid_view, 'Home', false),
             ),
             GestureDetector(
@@ -280,6 +286,73 @@ class ProfileScreen extends StatelessWidget {
               color: active ? Theme.of(context).primaryColor : const Color(0xFF70787E),
               letterSpacing: 1,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationMenuItem extends StatefulWidget {
+  const _NotificationMenuItem({super.key});
+
+  @override
+  State<_NotificationMenuItem> createState() => _NotificationMenuItemState();
+}
+
+class _NotificationMenuItemState extends State<_NotificationMenuItem> {
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    final value = await LocalStorageService().getNotificationPreference();
+    if (mounted) setState(() => _notificationsEnabled = value);
+  }
+
+  Future<void> _toggle(bool value) async {
+    if (mounted) setState(() => _notificationsEnabled = value);
+    await LocalStorageService().saveNotificationPreference(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.notifications_none, color: Color(0xFF00425E)),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF191C1D))),
+                Text('Local Device Preference', style: TextStyle(fontSize: 12, color: Color(0xFF50606D))),
+              ],
+            ),
+          ),
+          Switch(
+            value: _notificationsEnabled,
+            onChanged: _toggle,
+            activeColor: const Color(0xFF00425E),
           ),
         ],
       ),
