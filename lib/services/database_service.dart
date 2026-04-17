@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product.dart';
 
 class DatabaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+  
+  DatabaseService({FirebaseFirestore? firestore}) 
+      : _db = firestore ?? FirebaseFirestore.instance;
 
   // Collection reference
   CollectionReference get _productsRef => _db.collection('products');

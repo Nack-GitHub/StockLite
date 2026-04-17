@@ -27,7 +27,7 @@ void main() {
     });
 
     expect(find.text('StockLite'), findsOneWidget);
-    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.text('Welcome'), findsOneWidget);
     expect(find.byType(TextField), findsNWidgets(2));
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.textContaining('Sign up'), findsOneWidget);

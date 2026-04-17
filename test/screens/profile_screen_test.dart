@@ -22,7 +22,7 @@ void main() {
     when(() => mockAuthService.currentUser).thenReturn(mockUser);
     when(() => mockAuthService.authStateChanges).thenAnswer((_) => Stream.empty());
     when(() => mockDatabaseService.getUserProfile(any())).thenAnswer((_) => Stream.value({'name': 'Test User'}));
-    when(() => mockDatabaseService.products).thenAnswer((_) => Stream.value([]));
+    when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value([]));
   });
 
   testWidgets('ProfileScreen renders user information', (WidgetTester tester) async {

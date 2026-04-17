@@ -15,8 +15,11 @@ void main() {
     mockAuthService = MockAuthService();
     mockDatabaseService = MockDatabaseService();
 
+    final mockUser = MockUser();
+    when(() => mockUser.uid).thenReturn('user123');
+    when(() => mockAuthService.currentUser).thenReturn(mockUser);
     when(() => mockAuthService.authStateChanges).thenAnswer((_) => Stream.empty());
-    when(() => mockDatabaseService.products).thenAnswer((_) => Stream.value([]));
+    when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value([]));
   });
 
   testWidgets('HomeScreen renders welcome message and stats', (WidgetTester tester) async {
@@ -28,9 +31,9 @@ void main() {
       );
     });
 
-    expect(find.text('StockLite'), findsOneWidget);
+    expect(find.text('Product Catalog'), findsOneWidget);
     expect(find.text('OVERVIEW'), findsOneWidget);
-    expect(find.text('All Items'), findsOneWidget);
+    expect(find.text('Your inventory is empty'), findsOneWidget);
   });
 
   testWidgets('HomeScreen displays products from database', (WidgetTester tester) async {
@@ -39,7 +42,7 @@ void main() {
       createTestProduct(id: '2', name: 'Product B'),
     ];
 
-    when(() => mockDatabaseService.products).thenAnswer((_) => Stream.value(products));
+    when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value(products));
 
     await tester.runAsync(() async {
       await tester.pumpStockLite(
