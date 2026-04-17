@@ -5,8 +5,8 @@ class Product {
   final String imageUrl;
   final int stock;
   final String status;
-
   final String category;
+  final String? ownerId;
 
   Product({
     required this.id,
@@ -16,6 +16,7 @@ class Product {
     required this.stock,
     required this.status,
     required this.category,
+    this.ownerId,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +27,7 @@ class Product {
       'stock': stock,
       'status': status,
       'category': category,
+      'ownerId': ownerId,
     };
   }
 
@@ -38,6 +40,7 @@ class Product {
       stock: map['stock'] ?? 0,
       status: map['status'] ?? 'In Stock',
       category: map['category'] ?? 'General',
+      ownerId: map['ownerId'],
     );
   }
 }

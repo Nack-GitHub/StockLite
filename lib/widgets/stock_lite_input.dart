@@ -10,6 +10,7 @@ class StockLiteInput extends StatelessWidget {
   final TextInputAction? textInputAction;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final int? maxLength;
 
   const StockLiteInput({
     super.key,
@@ -22,6 +23,7 @@ class StockLiteInput extends StatelessWidget {
     this.textInputAction,
     this.controller,
     this.validator,
+    this.maxLength,
   });
 
   @override
@@ -46,6 +48,7 @@ class StockLiteInput extends StatelessWidget {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           validator: validator,
+          maxLength: maxLength,
           decoration: InputDecoration(
             hintText: hintText,
             prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
 import '../widgets/stock_lite_button.dart';
 import '../widgets/stock_lite_input.dart';
 
@@ -24,25 +25,60 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please agree to total precision terms.')),
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Precision Requirement'),
+          content: const Text('Please agree to total precision terms before proceeding.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
       return;
     }
 
     final authService = Provider.of<AuthService>(context, listen: false);
+    final dbService = Provider.of<DatabaseService>(context, listen: false);
     setState(() => _isLoading = true);
 
     try {
       await authService.signUp(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        name: _nameController.text.trim(),
+        onCreateProfile: (uid, name, email) => dbService.createUserProfile(uid, name, email),
       );
+
       if (mounted) Navigator.pop(context); // Go back to login
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red[700], size: 28),
+                const SizedBox(width: 12),
+                const Text('Sign Up Failed'),
+              ],
+            ),
+            content: Text(
+              e.toString().replaceAll(RegExp(r'\[.*\] '), ''),
+              style: const TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
         );
       }
     } finally {
@@ -120,7 +156,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         prefixIcon: Icons.lock_outline,
                         isPassword: true,
                         controller: _passwordController,
-                        validator: (value) => (value == null || value.length < 6) ? 'Please enter a password' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Please enter a password';
+                          if (value.length < 8) return 'Password must be at least 8 characters';
+                          if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])').hasMatch(value)) {
+                            return 'Include uppercase, lowercase, number, and special character';
+                          }
+                          return null;
+                        },
                       ).animate().fadeIn(delay: 500.ms).slideX(begin: -0.1),
                       const SizedBox(height: 24),
 

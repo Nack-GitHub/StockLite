@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final authService = Provider.of<AuthService>(context, listen: false);
     setState(() => _isLoading = true);
 
@@ -48,15 +48,37 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      
+
       // Save email locally for next time (satisfies local data requirement)
       await LocalStorageService().saveLastEmail(_emailController.text.trim());
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red[700], size: 28),
+                const SizedBox(width: 12),
+                const Text('Login Failed'),
+              ],
+            ),
+            content: Text(
+              e.toString().replaceAll(RegExp(r'\[.*\] '), ''),
+              style: const TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
           ),
         );
       }
@@ -94,11 +116,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.inventory_2, color: Colors.white, size: 32),
+                            const Icon(
+                              Icons.inventory_2,
+                              color: Colors.white,
+                              size: 32,
+                            ),
                             const SizedBox(width: 12),
                             Text(
                               'StockLite',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -109,16 +136,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Master your inventory with absolute precision.',
-                              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 48,
-                                  ),
-                            ).animate().fadeIn(duration: 800.ms).slideX(begin: -0.2),
+                                  'Master your inventory with absolute precision.',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayLarge
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 48,
+                                      ),
+                                )
+                                .animate()
+                                .fadeIn(duration: 800.ms)
+                                .slideX(begin: -0.2),
                             const SizedBox(height: 24),
                             Text(
                               'Designed for high-performance teams who value clarity over chaos. Transform your warehouse into a sanctuary of efficiency.',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
                                     color: Colors.white.withOpacity(0.8),
                                     fontSize: 18,
                                   ),
@@ -138,7 +172,10 @@ class _LoginScreenState extends State<LoginScreen> {
             flex: 5,
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 48,
+                  vertical: 32,
+                ),
                 child: Form(
                   key: _formKey,
                   child: ConstrainedBox(
@@ -150,12 +187,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (MediaQuery.of(context).size.width < 1024) ...[
                           Row(
                             children: [
-                              Icon(Icons.inventory_2, color: Theme.of(context).primaryColor, size: 32),
+                              Icon(
+                                Icons.inventory_2,
+                                color: Theme.of(context).primaryColor,
+                                size: 32,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   'StockLite',
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
                                         color: Theme.of(context).primaryColor,
                                         fontWeight: FontWeight.w900,
                                       ),
@@ -167,9 +211,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 48),
                         ],
 
-                        Text('Welcome Back', style: Theme.of(context).textTheme.displayMedium).animate().fadeIn().slideY(begin: 0.1),
+                        Text(
+                          'Welcome',
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ).animate().fadeIn().slideY(begin: 0.1),
                         const SizedBox(height: 8),
-                        Text('Please sign in to access your dashboard.', style: Theme.of(context).textTheme.bodyMedium).animate().fadeIn(delay: 200.ms),
+                        Text(
+                          'Please sign in to access your dashboard.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ).animate().fadeIn(delay: 200.ms),
                         const SizedBox(height: 48),
 
                         StockLiteInput(
@@ -178,8 +228,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icons.mail_outline,
                           controller: _emailController,
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Please enter your email';
-                            if (!value.contains('@')) return 'Please enter a valid email';
+                            if (value == null || value.isEmpty)
+                              return 'Please enter your email';
+                            if (!value.contains('@'))
+                              return 'Please enter a valid email';
                             return null;
                           },
                         ),
@@ -189,13 +241,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Text(
                               'PASSWORD',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.2,
                                     color: const Color(0xFF50606D),
                                   ),
                             ),
-                            TextButton(onPressed: () {}, child: const Text('Forgot Password?')),
+                            TextButton(
+                              onPressed: () {},
+                              child: const Text('Forgot Password?'),
+                            ),
                           ],
                         ),
                         StockLiteInput(
@@ -206,14 +262,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _passwordController,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               size: 20,
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Please enter your password';
-                            if (value.length < 6) return 'Password must be at least 6 characters';
+                            if (value == null || value.isEmpty)
+                              return 'Please enter your password';
+                            if (value.length < 8)
+                              return 'Password must be at least 8 characters';
                             return null;
                           },
                         ),
@@ -225,12 +287,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 text: 'Sign In',
                                 onPressed: _handleLogin,
                                 icon: Icons.arrow_forward,
-                              ).animate().scale(delay: 600.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                              ).animate().scale(
+                                delay: 600.ms,
+                                duration: 400.ms,
+                                curve: Curves.easeOutBack,
+                              ),
 
                         const SizedBox(height: 48),
                         Center(
                           child: GestureDetector(
-                            onTap: () => Navigator.pushNamed(context, '/signup'),
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/signup'),
                             child: Text.rich(
                               TextSpan(
                                 text: 'New to the precision workflow? ',

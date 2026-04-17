@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/database_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/stock_lite_button.dart';
 import '../widgets/stock_lite_input.dart';
 
@@ -21,7 +22,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
   int _initialStock = 10;
   bool _isLoading = false;
 
-  final List<String> _categories = ['Electronics', 'Office Supplies', 'Furniture', 'Apparel', 'Other'];
+  final List<String> _categories = [
+    'Electronics',
+    'Office Supplies',
+    'Furniture',
+    'Apparel',
+    'Other',
+  ];
 
   void _incrementStock() => setState(() => _initialStock++);
   void _decrementStock() {
@@ -32,6 +39,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final dbService = Provider.of<DatabaseService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final uid = authService.currentUser?.uid;
+
     setState(() => _isLoading = true);
 
     try {
@@ -41,14 +51,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
         sku: _skuController.text.trim(),
         category: _selectedCategory,
         stock: _initialStock,
-        status: _initialStock == 0 ? 'Out of Stock' : (_initialStock < 10 ? 'Low Stock' : 'In Stock'),
+        status: _initialStock == 0
+            ? 'Out of Stock'
+            : (_initialStock < 10 ? 'Low Stock' : 'In Stock'),
         imageUrl: '', // Default empty for now
+        ownerId: uid,
       );
       await dbService.addProduct(product);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product added successfully')),
+          const SnackBar(
+            content: Text('Product added successfully'),
+            backgroundColor: Color(0xFF2E7D32), // Success green
+          ),
         );
       }
     } catch (e) {
@@ -66,12 +82,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('NEW DISPATCH', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 2)),
+        title: Text(
+          '',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
+        ),
         centerTitle: true,
-        actions: [
-          IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () {}),
-          const SizedBox(width: 8),
-        ],
+        // actions: [
+        //   IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () {}),
+        //   const SizedBox(width: 8),
+        // ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -82,18 +104,29 @@ class _AddProductScreenState extends State<AddProductScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 32),
-                Text('Add Product', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  'Add Product',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('Register a new item into the precision system.', style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Register a new item into the precision system.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 48),
 
                 _buildLabel('Product Designation'),
                 StockLiteInput(
                   label: '',
-                  hintText: 'e.g. Precision Lathe V3',
+                  hintText: 'e.g. Product Name V1',
                   prefixIcon: Icons.inventory_2_outlined,
                   controller: _nameController,
-                  validator: (value) => (value == null || value.isEmpty) ? 'Please enter a product name' : null,
+                  maxLength: 100,
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? 'Please enter a product name'
+                      : null,
                 ),
                 const SizedBox(height: 32),
 
@@ -110,7 +143,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             hintText: 'SL-001',
                             prefixIcon: Icons.tag,
                             controller: _skuController,
-                            validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                            validator: (value) =>
+                                (value == null || value.isEmpty)
+                                ? 'Required'
+                                : null,
                           ),
                         ],
                       ),
@@ -135,17 +171,28 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   children: [
                     Text(
                       '$_initialStock',
-                      style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Color(0xFF191C1D)),
+                      style: const TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF191C1D),
+                      ),
                     ).animate(target: _initialStock.toDouble()).shimmer(),
                     const Spacer(),
-                    const Text('UNITS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF50606D))),
+                    const Text(
+                      'UNITS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Color(0xFF50606D),
+                      ),
+                    ),
                     const SizedBox(width: 16),
                     _buildCounterButton(Icons.remove, _decrementStock),
                     const SizedBox(width: 8),
                     _buildCounterButton(Icons.add, _incrementStock),
                   ],
                 ),
-                
+
                 const SizedBox(height: 40),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -169,14 +216,30 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('PREVIEW', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF00425E))),
+                          const Text(
+                            'PREVIEW',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              color: Color(0xFF00425E),
+                            ),
+                          ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFDCBE),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text('REAL-TIME', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900)),
+                            child: const Text(
+                              'REAL-TIME',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -189,8 +252,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
+                              image: const DecorationImage(
+                                image: NetworkImage(
+                                  'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=400',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            child: const Icon(Icons.image_outlined, color: Color(0xFFC0C7CE), size: 32),
                           ),
                           const SizedBox(width: 20),
                           Expanded(
@@ -201,10 +269,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _nameController.text.isEmpty ? 'Product Title' : _nameController.text,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF00425E)),
+                                      _nameController.text.isEmpty
+                                          ? 'Product Title'
+                                          : _nameController.text,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Color(0xFF00425E),
+                                      ),
                                     ),
-                                    Text(_selectedCategory, style: const TextStyle(fontSize: 12, color: Color(0xFF50606D))),
+                                    Text(
+                                      _selectedCategory,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF50606D),
+                                      ),
+                                    ),
                                   ],
                                 );
                               },
@@ -238,16 +318,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
-              onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+              onTap: () => Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (route) => false,
+              ),
               child: _buildNavItem(context, Icons.grid_view, 'Home', false),
             ),
             GestureDetector(
-              onTap: () => Navigator.pushReplacementNamed(context, '/add_product'),
+              onTap: () =>
+                  Navigator.pushReplacementNamed(context, '/add_product'),
               child: _buildNavItem(context, Icons.add_circle, 'Add', true),
             ),
             GestureDetector(
               onTap: () => Navigator.pushReplacementNamed(context, '/profile'),
-              child: _buildNavItem(context, Icons.person_outline, 'Profile', false),
+              child: _buildNavItem(
+                context,
+                Icons.person_outline,
+                'Profile',
+                false,
+              ),
             ),
           ],
         ),
@@ -310,7 +400,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool active) {
+  Widget _buildNavItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    bool active,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
@@ -320,13 +415,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: active ? Theme.of(context).primaryColor : const Color(0xFF70787E)),
+          Icon(
+            icon,
+            color: active
+                ? Theme.of(context).primaryColor
+                : const Color(0xFF70787E),
+          ),
           Text(
             label.toUpperCase(),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: active ? Theme.of(context).primaryColor : const Color(0xFF70787E),
+              color: active
+                  ? Theme.of(context).primaryColor
+                  : const Color(0xFF70787E),
               letterSpacing: 1,
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/database_service.dart';
+import '../services/auth_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -85,6 +86,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final uid = authService.currentUser?.uid;
+    final isOwner = widget.product.ownerId == uid;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -116,11 +121,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.white),
-                    onPressed: _deleteProduct,
-                  ),
-                  const SizedBox(width: 8),
+                  if (isOwner)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: _deleteProduct,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
                 expandedHeight: 400,
                 pinned: true,
@@ -131,8 +154,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Image.network(
                         widget.product.imageUrl.startsWith('http')
                             ? widget.product.imageUrl
-                            : 'https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&q=80&w=400',
+                            : 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=400',
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: const Color(0xFFF3F4F5),
+                            child: const Center(
+                              child: Icon(Icons.inventory_2_outlined, color: Color(0xFFC0C7CE), size: 48),
+                            ),
+                          );
+                        },
                       ),
                       Container(
                         decoration: BoxDecoration(

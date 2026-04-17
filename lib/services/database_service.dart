@@ -8,9 +8,12 @@ class DatabaseService {
   CollectionReference get _productsRef => _db.collection('products');
   CollectionReference get _usersRef => _db.collection('users');
 
-  // GET PRODUCTS (Stream)
-  Stream<List<Product>> get products {
-    return _productsRef.snapshots().map((snapshot) {
+  // GET PRODUCTS (Stream) - Filtered by ownerId
+  Stream<List<Product>> getProducts(String uid) {
+    return _productsRef
+        .where('ownerId', isEqualTo: uid)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         return Product.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();

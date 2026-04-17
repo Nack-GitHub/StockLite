@@ -3,127 +3,207 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/database_service.dart';
+import '../services/auth_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final dbService = Provider.of<DatabaseService>(context);
+    final authService = Provider.of<AuthService>(context);
+    final uid = authService.currentUser?.uid ?? '';
 
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             // Header & Search
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                Text(
-                  'OVERVIEW',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: const Color(0xFF50606D),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Text(
+                    'OVERVIEW',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: const Color(0xFF50606D),
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Product Catalog',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Product Catalog',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w800,
-                          ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value.toLowerCase();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search SKU, name, or category...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      fillColor: const Color(0xFFE1E3E4).withOpacity(0.5),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                    ),
+                  ).animate().fadeIn(delay: 200.ms),
+                ]),
+              ),
+            ),
+
+            // StreamBuilder for Products
+            StreamBuilder<List<Product>>(
+              stream: dbService.getProducts(uid),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  );
+                }
+
+                final allProducts = snapshot.data ?? [];
+                
+                // Filtering Logic
+                final products = allProducts.where((p) {
+                  if (_searchQuery.isEmpty) return true;
+                  return p.name.toLowerCase().contains(_searchQuery) ||
+                         p.sku.toLowerCase().contains(_searchQuery) ||
+                         p.category.toLowerCase().contains(_searchQuery);
+                }).toList();
+
+                final lowStockCount = allProducts.where((p) => p.stock < 10 && p.stock > 0).length;
+                final outOfStockCount = allProducts.where((p) => p.stock == 0).length;
+
+                if (allProducts.isEmpty && _searchQuery.isEmpty) {
+                   return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 48),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey.withOpacity(0.3)),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Your inventory is empty',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Start by adding your first product.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF50606D)),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.pushNamed(context, '/add_product'),
+                              label: const Text('Add Product'),
+                              icon: const Icon(Icons.add),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverMainAxisGroup(
+                  slivers: [
+                    // Stats Pills
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 48,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          children: [
+                            _buildStatPill(context, 'All Items', '${allProducts.length}', true),
+                            _buildStatPill(context, 'Low Stock', '$lowStockCount', false, const Color(0xFFFFB871)),
+                            _buildStatPill(context, 'Out of Stock', '$outOfStockCount', false, const Color(0xFFE1E3E4)),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Product Grid
+                    SliverPadding(
+                      padding: const EdgeInsets.all(24),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 250,
+                          mainAxisSpacing: 24,
+                          crossAxisSpacing: 24,
+                          childAspectRatio: 0.75,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            if (index < products.length) {
+                              return _buildProductCard(context, products[index], index);
+                            } else if (index == products.length) {
+                              // Only show add placeholder if we have room in the layout (usually at end of all products)
+                              return _buildAddPlaceholder(context);
+                            }
+                            return null;
+                          },
+                          childCount: products.length + 1,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search SKU, name, or category...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    fillColor: const Color(0xFFE1E3E4).withOpacity(0.5),
-                  ),
-                ).animate().fadeIn(delay: 200.ms),
-              ]),
+                );
+              },
             ),
-          ),
-
-          // StreamBuilder for Products
-          StreamBuilder<List<Product>>(
-            stream: dbService.products,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              if (snapshot.hasError) {
-                return SliverToBoxAdapter(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
-                );
-              }
-
-              final products = snapshot.data ?? [];
-              final lowStockCount = products.where((p) => p.stock < 10).length;
-
-              return SliverMainAxisGroup(
-                slivers: [
-                  // Stats Pills
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 48,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        children: [
-                          _buildStatPill(context, 'All Items', '${products.length}', true),
-                          _buildStatPill(context, 'Low Stock', '$lowStockCount', false, const Color(0xFFFFB871)),
-                          _buildStatPill(context, 'In Transit', '5', false, const Color(0xFFD1E2F1)),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Product Grid
-                  SliverPadding(
-                    padding: const EdgeInsets.all(24),
-                    sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 250,
-                        mainAxisSpacing: 24,
-                        crossAxisSpacing: 24,
-                        childAspectRatio: 0.75,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          if (index < products.length) {
-                            return _buildProductCard(context, products[index], index);
-                          } else if (index == products.length) {
-                            return _buildAddPlaceholder(context);
-                          }
-                          return null;
-                        },
-                        childCount: products.length + 1,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => Navigator.pushNamed(context, '/add_product'),
         backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+        child: const Icon(Icons.add, color: Colors.white),
       ).animate().scale(delay: 1.seconds),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(bottom: 24, top: 12),
