@@ -46,3 +46,8 @@ app.*.map.json
 
 # User requested to ignore stitch folder
 stitch/
+
+# Project documentation and logs
+requirements.md
+testing.md
+*log*

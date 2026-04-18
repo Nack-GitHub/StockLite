@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:stock_lite/screens/login_screen.dart';
@@ -13,11 +12,15 @@ void main() {
     setupTestGlobals();
     mockAuthService = MockAuthService();
     mockDatabaseService = MockDatabaseService();
-    
-    when(() => mockAuthService.authStateChanges).thenAnswer((_) => Stream.empty());
+
+    when(
+      () => mockAuthService.authStateChanges,
+    ).thenAnswer((_) => Stream.empty());
   });
 
-  testWidgets('LoginScreen renders logo, fields and buttons', (WidgetTester tester) async {
+  testWidgets('LoginScreen renders logo, fields and buttons', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       await tester.pumpStockLite(
         const LoginScreen(),
@@ -33,7 +36,9 @@ void main() {
     expect(find.textContaining('Sign up'), findsOneWidget);
   });
 
-  testWidgets('LoginScreen toggles password visibility', (WidgetTester tester) async {
+  testWidgets('LoginScreen toggles password visibility', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       await tester.pumpStockLite(
         const LoginScreen(),
@@ -44,14 +49,16 @@ void main() {
 
     final visibilityIcon = find.byIcon(Icons.visibility_off_outlined);
     expect(visibilityIcon, findsOneWidget);
-    
+
     await tester.tap(visibilityIcon);
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
   });
 
-  testWidgets('LoginScreen validation shows errors on empty fields', (WidgetTester tester) async {
+  testWidgets('LoginScreen validation shows errors on empty fields', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       await tester.pumpStockLite(
         const LoginScreen(),

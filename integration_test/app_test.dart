@@ -48,22 +48,37 @@ void main() {
     final nameField = find.widgetWithText(StockLiteInput, 'FULL NAME');
     final emailField = find.widgetWithText(StockLiteInput, 'WORK EMAIL');
     final passField = find.widgetWithText(StockLiteInput, 'PASSWORD');
-    final confirmField = find.widgetWithText(StockLiteInput, 'CONFIRM PASSWORD');
+    final confirmField = find.widgetWithText(
+      StockLiteInput,
+      'CONFIRM PASSWORD',
+    );
 
     await tester.ensureVisible(nameField);
-    await tester.enterText(find.descendant(of: nameField, matching: find.byType(TextFormField)), 'E2E User');
+    await tester.enterText(
+      find.descendant(of: nameField, matching: find.byType(TextFormField)),
+      'E2E User',
+    );
     await tester.pump();
 
     await tester.ensureVisible(emailField);
-    await tester.enterText(find.descendant(of: emailField, matching: find.byType(TextFormField)), testEmail);
+    await tester.enterText(
+      find.descendant(of: emailField, matching: find.byType(TextFormField)),
+      testEmail,
+    );
     await tester.pump();
 
     await tester.ensureVisible(passField);
-    await tester.enterText(find.descendant(of: passField, matching: find.byType(TextFormField)), testPassword);
+    await tester.enterText(
+      find.descendant(of: passField, matching: find.byType(TextFormField)),
+      testPassword,
+    );
     await tester.pump();
 
     await tester.ensureVisible(confirmField);
-    await tester.enterText(find.descendant(of: confirmField, matching: find.byType(TextFormField)), testPassword);
+    await tester.enterText(
+      find.descendant(of: confirmField, matching: find.byType(TextFormField)),
+      testPassword,
+    );
     await tester.pumpAndSettle();
 
     // Check terms
@@ -87,20 +102,29 @@ void main() {
 
     // 4. Check for direct login or return to Login screen
     print('STEP 4: Verifying post-registration state');
-    
+
     // Check if we are already on the HOME screen
     bool isAtHome = find.text('PROFILE').evaluate().isNotEmpty;
-    
+
     if (!isAtHome) {
       print('DEBUG: Not at home, checking Login screen');
       expect(find.text('Welcome'), findsOneWidget);
-      
+
       final loginEmailField = find.widgetWithText(StockLiteInput, 'WORK EMAIL');
-      await tester.enterText(find.descendant(of: loginEmailField, matching: find.byType(TextFormField)), testEmail);
+      await tester.enterText(
+        find.descendant(
+          of: loginEmailField,
+          matching: find.byType(TextFormField),
+        ),
+        testEmail,
+      );
       await tester.pump();
-      
+
       final passInput = find.byIcon(Icons.lock_outline);
-      await tester.enterText(find.ancestor(of: passInput, matching: find.byType(TextFormField)), testPassword);
+      await tester.enterText(
+        find.ancestor(of: passInput, matching: find.byType(TextFormField)),
+        testPassword,
+      );
       await tester.pump();
 
       final signInBtn = find.descendant(
@@ -132,9 +156,15 @@ void main() {
     final nameInputIcon = find.byIcon(Icons.inventory_2_outlined);
     final skuInputIcon = find.byIcon(Icons.tag);
 
-    await tester.enterText(find.ancestor(of: nameInputIcon, matching: find.byType(TextFormField)), productName);
+    await tester.enterText(
+      find.ancestor(of: nameInputIcon, matching: find.byType(TextFormField)),
+      productName,
+    );
     await tester.pump();
-    await tester.enterText(find.ancestor(of: skuInputIcon, matching: find.byType(TextFormField)), 'SKU-$uniqueId');
+    await tester.enterText(
+      find.ancestor(of: skuInputIcon, matching: find.byType(TextFormField)),
+      'SKU-$uniqueId',
+    );
     await tester.pumpAndSettle();
 
     // 8. Submit Product
@@ -145,7 +175,7 @@ void main() {
     );
     await tester.ensureVisible(saveProductBtn);
     await tester.tap(saveProductBtn);
-    
+
     // Firestore wait
     await tester.pumpAndSettle(const Duration(seconds: 6));
 
@@ -155,7 +185,13 @@ void main() {
     await tester.tap(homeNavBtn);
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
-    await tester.dragUntilVisible(find.text(productName), find.byType(ListView), const Offset(0, -100)).catchError((_) => null);
+    await tester
+        .dragUntilVisible(
+          find.text(productName),
+          find.byType(ListView),
+          const Offset(0, -100),
+        )
+        .catchError((_) => null);
     expect(find.text(productName), findsOneWidget);
 
     // 10. Open Product Details
