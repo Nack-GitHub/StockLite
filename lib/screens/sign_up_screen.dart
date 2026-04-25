@@ -159,6 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Please enter a password';
                           if (value.length < 8) return 'Password must be at least 8 characters';
+                          if (value.length > 16) return 'Password must not exceed 16 characters';
                           if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])').hasMatch(value)) {
                             return 'Include uppercase, lowercase, number, and special character';
                           }

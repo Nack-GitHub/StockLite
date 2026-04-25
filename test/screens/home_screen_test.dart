@@ -36,25 +36,64 @@ void main() {
     expect(find.text('Your inventory is empty'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen displays products from database', (WidgetTester tester) async {
-    final products = [
-      createTestProduct(id: '1', name: 'Product A'),
-      createTestProduct(id: '2', name: 'Product B'),
-    ];
+  group('HomeScreen - Black-Box Testing', () {
+    testWidgets('Use Case: Search for a specific product by name', (WidgetTester tester) async {
+      final products = [
+        createTestProduct(id: '1', name: 'MacBook Pro', category: 'Electronics'),
+        createTestProduct(id: '2', name: 'Standing Desk', category: 'Furniture'),
+      ];
 
-    when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value(products));
+      when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value(products));
 
-    await tester.runAsync(() async {
-      await tester.pumpStockLite(
-        const HomeScreen(),
-        authService: mockAuthService,
-        databaseService: mockDatabaseService,
-      );
+      await tester.runAsync(() async {
+        await tester.pumpStockLite(
+          const HomeScreen(),
+          authService: mockAuthService,
+          databaseService: mockDatabaseService,
+        );
+      });
+
+      await tester.pumpAndSettle();
+
+      // Search for "MacBook"
+      await tester.enterText(find.byType(TextField), 'MacBook');
+      await tester.pumpAndSettle();
+
+      expect(find.text('MacBook Pro'), findsOneWidget);
+      expect(find.text('Standing Desk'), findsNothing);
+
+      // Clear search
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pumpAndSettle();
+
+      expect(find.text('MacBook Pro'), findsOneWidget);
+      expect(find.text('Standing Desk'), findsOneWidget);
     });
 
-    await tester.pumpAndSettle();
+    testWidgets('Decision Table: Filter by Category (Electronics vs Furniture)', (WidgetTester tester) async {
+      final products = [
+        createTestProduct(id: '1', name: 'iPhone', category: 'Electronics'),
+        createTestProduct(id: '2', name: 'Sofa', category: 'Furniture'),
+      ];
 
-    expect(find.text('Product A'), findsOneWidget);
-    expect(find.text('Product B'), findsOneWidget);
+      when(() => mockDatabaseService.getProducts(any())).thenAnswer((_) => Stream.value(products));
+
+      await tester.runAsync(() async {
+        await tester.pumpStockLite(
+          const HomeScreen(),
+          authService: mockAuthService,
+          databaseService: mockDatabaseService,
+        );
+      });
+
+      await tester.pumpAndSettle();
+
+      // Search "Electronics" (EP: Category Filter)
+      await tester.enterText(find.byType(TextField), 'Electronics');
+      await tester.pumpAndSettle();
+
+      expect(find.text('iPhone'), findsOneWidget);
+      expect(find.text('Sofa'), findsNothing);
+    });
   });
 }

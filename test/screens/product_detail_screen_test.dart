@@ -37,24 +37,54 @@ void main() {
     expect(find.byIcon(Icons.remove), findsOneWidget);
   });
 
-  testWidgets('ProductDetailScreen buttons trigger stock updates', (WidgetTester tester) async {
-    when(() => mockDatabaseService.updateProductStock(any(), any())).thenAnswer((_) async => {});
+  group('ProductDetailScreen - State Transition Testing (Stock)', () {
+    testWidgets('Stock updates trigger state transitions in UI', (WidgetTester tester) async {
+      when(() => mockDatabaseService.updateProductStock(any(), any())).thenAnswer((_) async => {});
 
-    await tester.runAsync(() async {
-      await tester.pumpStockLite(
-        ProductDetailScreen(product: testProduct),
-        authService: mockAuthService,
-        databaseService: mockDatabaseService,
-      );
+      // Start with stock 2 (Low Stock)
+      final p2 = createTestProduct(id: '2', stock: 2);
+
+      await tester.runAsync(() async {
+        await tester.pumpStockLite(
+          ProductDetailScreen(product: p2),
+          authService: mockAuthService,
+          databaseService: mockDatabaseService,
+        );
+        await tester.pumpAndSettle();
+      });
+
+      expect(find.text('LOW STOCK'), findsOneWidget);
+
+      // --- Transition: Low Stock -> Out of Stock (2 -> 0) ---
+      await tester.tap(find.byIcon(Icons.remove));
       await tester.pumpAndSettle();
+      verify(() => mockDatabaseService.updateProductStock('2', 1)).called(1);
+
+      await tester.tap(find.byIcon(Icons.remove));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0'), findsOneWidget);
+      expect(find.text('OUT OF STOCK'), findsOneWidget);
+      verify(() => mockDatabaseService.updateProductStock('2', 0)).called(1);
+
+      // --- Transition: Out of Stock -> Low Stock (0 -> 1) ---
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('LOW STOCK'), findsOneWidget);
+      // It was called once before during "down", now it's the 2nd time
+      verify(() => mockDatabaseService.updateProductStock('2', 1)).called(1);
+
+      // --- Transition: Low Stock -> In Stock (1 -> 10) ---
+      for (int i = 2; i <= 10; i++) {
+        await tester.tap(find.byIcon(Icons.add));
+        await tester.pumpAndSettle();
+        verify(() => mockDatabaseService.updateProductStock('2', i)).called(1);
+      }
+
+      expect(find.text('10'), findsOneWidget);
+      expect(find.text('IN STOCK'), findsOneWidget);
     });
-
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
-    verify(() => mockDatabaseService.updateProductStock('1', 51)).called(1);
-
-    await tester.tap(find.byIcon(Icons.remove));
-    await tester.pumpAndSettle();
-    verify(() => mockDatabaseService.updateProductStock('1', 50)).called(1);
   });
 }

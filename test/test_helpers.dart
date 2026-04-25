@@ -10,9 +10,11 @@ import 'package:provider/provider.dart';
 import 'package:stock_lite/services/auth_service.dart';
 import 'package:stock_lite/services/database_service.dart';
 import 'package:stock_lite/models/product.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Initialize global settings for tests
 void setupTestGlobals() {
+  SharedPreferences.setMockInitialValues({});
   Animate.restartOnHotReload = true;
   Animate.defaultDuration = Duration.zero;
   HttpOverrides.global = MockHttpOverrides();
@@ -82,6 +84,7 @@ class MockAuthService extends Mock implements AuthService {}
 class MockDatabaseService extends Mock implements DatabaseService {}
 class MockUser extends Mock implements User {}
 class MockUserCredential extends Mock implements UserCredential {}
+class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 // App Wrapper for tests
 extension WidgetTesterExtension on WidgetTester {

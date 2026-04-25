@@ -44,11 +44,37 @@ StockLite is a modern, user-friendly inventory management system built with Flut
 
 ### Running the App
 
-Start the development server:
+To run the application in development mode:
 
 ```bash
 flutter run
 ```
+
+### Running Tests
+
+To verify that the installation was successful and all features are working correctly, run the automated test suite:
+
+**1. Unit & Widget Tests:**
+
+```bash
+flutter test
+```
+
+**2. Integration Tests (Web/Chrome):**
+
+- **Step 0:** Kill all running Chrome and ChromeDriver processes:
+  ```bash
+  killall chromedriver
+  killall "Google Chrome"
+  ```
+- **Step 1:** Start ChromeDriver in a separate terminal:
+  ```bash
+  chromedriver --port=4444
+  ```
+- **Step 2:** Run the integration test:
+  ```bash
+  flutter drive --driver=test_driver/integration_test.dart --target=integration_test/demo_test.dart -d chrome
+  ```
 
 ## Project Structure
 

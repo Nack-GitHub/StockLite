@@ -276,6 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               return 'Please enter your password';
                             if (value.length < 8)
                               return 'Password must be at least 8 characters';
+                            if (value.length > 16)
+                              return 'Password must not exceed 16 characters';
                             return null;
                           },
                         ),

@@ -15,6 +15,11 @@ class LocalStorageService {
     _prefs ??= await SharedPreferences.getInstance();
   }
 
+  // For testing purposes
+  static void reset() {
+    _instance._prefs = null;
+  }
+
   // Save the last successfully logged in email
   Future<void> saveLastEmail(String email) async {
     await init();

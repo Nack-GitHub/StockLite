@@ -1,72 +1,107 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart' as auth_mocks;
+import 'package:mocktail/mocktail.dart';
 import 'package:stock_lite/services/auth_service.dart';
+import '../test_helpers.dart';
 
 void main() {
   late AuthService authService;
-  late MockFirebaseAuth mockAuth;
+  late auth_mocks.MockFirebaseAuth mockAuth;
 
   setUp(() {
-    mockAuth = MockFirebaseAuth();
+    mockAuth = auth_mocks.MockFirebaseAuth();
     authService = AuthService(auth: mockAuth);
   });
 
-  group('AuthService Tests', () {
-    test('initial currentUser should be null', () {
+  group('AuthService - Advanced Testing', () {
+    test('State Transition: Authentication status lifecycle', () async {
+      // State: Logged Out
+      expect(authService.currentUser, isNull);
+
+      // Event: Sign Up (Transition to Logged In)
+      await authService.signUp(
+        email: 'transition@test.com',
+        password: 'password123',
+        name: 'Transition User',
+        onCreateProfile: (uid, name, email) async {},
+      );
+      expect(authService.currentUser, isNotNull);
+
+      // Event: Sign Out (Transition to Logged Out)
+      await authService.signOut();
       expect(authService.currentUser, isNull);
     });
 
-    test('signIn authenticates the user successfully', () async {
-      // Create a mock user in the fake auth
-      final mockUser = MockUser(
-        isAnonymous: false,
-        uid: 'user123',
-        email: 'test@example.com',
-        displayName: 'Test User',
-      );
-      
-      final specificMockAuth = MockFirebaseAuth(mockUser: mockUser);
-      final specificAuthService = AuthService(auth: specificMockAuth);
-      
-      expect(specificAuthService.currentUser, isNull);
-      
-      final credential = await specificAuthService.signIn('test@example.com', 'password123');
-      
-      expect(credential!.user, isNotNull);
-      expect(credential.user?.uid, 'user123');
-      expect(specificAuthService.currentUser?.uid, 'user123');
-    });
+    test('Use Case: Complete User Auth Lifecycle', () async {
+      const email = 'usecase@test.com';
+      const password = 'password123';
 
-    test('signUp creates user successfully', () async {
-      final credential = await authService.signUp(
-        email: 'new@example.com', 
-        password: 'password123',
-        name: 'New User',
+      // 1. New user signs up
+      await authService.signUp(
+        email: email,
+        password: password,
+        name: 'User One',
         onCreateProfile: (uid, name, email) async {},
       );
-      
-      expect(credential!.user, isNotNull);
-      
-      // Note: firebase_auth_mocks automatically signs in upon signing up
-      expect(authService.currentUser, isNotNull);
+      expect(authService.currentUser?.email, email);
+
+      // 2. User signs out
+      await authService.signOut();
+      expect(authService.currentUser, isNull);
+
+      // 3. User signs back in
+      await authService.signIn(email, password);
+      expect(authService.currentUser?.email, email);
     });
 
-    test('signOut signs out the user successfully', () async {
-      // Mock an existing signed-in user
-      final mockUser = MockUser(
-        isAnonymous: false,
-        uid: 'user123',
-        email: 'test@example.com',
-        displayName: 'Test User',
+    test('initial currentUser should be null', () {
+      expect(authService.currentUser, isNull);
+    });
+  });
+
+  group('AuthService - Error Handling (Negative Testing)', () {
+    late AuthService errorAuthService;
+    late MockFirebaseAuth mockErrorAuth;
+
+    setUp(() {
+      mockErrorAuth = MockFirebaseAuth();
+      errorAuthService = AuthService(auth: mockErrorAuth);
+    });
+
+    test('signIn throws FirebaseAuthException on invalid credentials', () async {
+      when(() => mockErrorAuth.signInWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      )).thenThrow(firebase_auth.FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No user found for that email.',
+      ));
+
+      expect(
+        () => errorAuthService.signIn('wrong@test.com', 'pass'),
+        throwsA(isA<firebase_auth.FirebaseAuthException>()),
       );
-      final specificMockAuth = MockFirebaseAuth(mockUser: mockUser, signedIn: true);
-      final specificAuthService = AuthService(auth: specificMockAuth);
-      
-      expect(specificAuthService.currentUser, isNotNull);
+    });
 
-      await specificAuthService.signOut();
+    test('signUp throws FirebaseAuthException on weak password', () async {
+      when(() => mockErrorAuth.createUserWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      )).thenThrow(firebase_auth.FirebaseAuthException(
+        code: 'weak-password',
+        message: 'The password provided is too weak.',
+      ));
 
-      expect(specificAuthService.currentUser, isNull);
+      expect(
+        () => errorAuthService.signUp(
+          email: 'test@test.com',
+          password: '123',
+          name: 'Name',
+          onCreateProfile: (_, __, ___) async {},
+        ),
+        throwsA(isA<firebase_auth.FirebaseAuthException>()),
+      );
     });
   });
 }
