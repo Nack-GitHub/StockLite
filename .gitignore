@@ -51,3 +51,8 @@ stitch/
 requirements.md
 testing.md
 *log*
+test_results.txt
+test_output.txt
+test_all_output.txt
+add_product_output*.txt
+SoftwareTestingReport2_68.pdf
