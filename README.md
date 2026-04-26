@@ -1,8 +1,15 @@
-# StockLite - Inventory Management System
-
 StockLite is a modern, user-friendly inventory management system built with Flutter. It allows small businesses and individuals to track products, manage stock levels, and monitor sales and purchases efficiently.
 
-## Features
+## 📱 Application Overview
+
+StockLite provides a centralized platform for real-time inventory tracking. It simplifies the complexity of warehouse management by providing instant visibility into stock levels, automated status updates (In Stock, Low Stock, Out of Stock), and detailed transaction histories.
+
+### 🎯 Target Users
+- **Small Business Owners**: Who need a simple way to track stock without expensive ERP systems.
+- **Warehouse Managers**: Looking for a mobile-first tool to update inventory on the go.
+- **Individual Sellers**: Managing inventory for e-commerce platforms like Etsy, eBay, or local markets.
+
+## ✨ Features
 
 - **Authentication**: Secure login and registration with email/password.
 - **Product Management**: Add, edit, and delete products with details like name, category, price, and stock quantity.
@@ -10,6 +17,84 @@ StockLite is a modern, user-friendly inventory management system built with Flut
 - **Sales & Purchases**: Record sales and purchases to maintain a complete transaction history.
 - **Dashboard**: Visual overview of total stock value, low stock items, and recent activities.
 - **User Profile**: Manage user profile and account settings.
+
+## 🏗️ Application Architecture
+
+The application follows a clean, service-oriented architecture:
+
+- **UI Layer (Flutter)**: Handles user interaction and state management.
+- **Service Layer**: Decouples business logic from data sources.
+    - `AuthService`: Manages user identity via Firebase Auth.
+    - `DatabaseService`: Handles real-time synchronization with Cloud Firestore.
+    - `LocalStorageService`: Manages persistent local preferences (SharedPreferences).
+- **Data Layer (Firebase)**: Cloud-native backend providing authentication and NoSQL database capabilities.
+
+## 🗺️ Page Navigation
+
+The app is organized into a primary tabbed interface for seamless navigation:
+
+- **Login/Sign Up**: Entry point for authentication.
+- **Main Navigation (Bottom Tabs)**:
+    - **Dashboard**: High-level KPIs and stock alerts.
+    - **Products**: Searchable list of all inventory items.
+    - **Transactions**: History of stock movements.
+    - **Profile**: Account management and settings.
+- **Action Screens**:
+    - **Add Product**: Dedicated form for new inventory entry.
+    - **Product Detail**: View and update specific item stock levels.
+
+## 💾 Data Design
+
+The system uses a hybrid storage approach combining cloud-native persistence with local caching for preferences.
+
+### Firebase Collections
+- **`products`**:
+    - `name` (String): Product display name.
+    - `sku` (String): Unique stock keeping unit identifier.
+    - `category` (String): Item classification.
+    - `stock` (Number): Current inventory count.
+    - `status` (String): Auto-computed (`In Stock`, `Low Stock`, `Out of Stock`).
+    - `ownerId` (String): Foreign key to the `users` collection for data isolation.
+- **`users`**:
+    - `name`, `email` (String): Identity metadata.
+    - `role` (String): User permission level.
+    - `stats` (Map): Aggregated dashboard data.
+
+### Local Storage (SharedPreferences)
+- **`last_email`**: Remembers the most recent successful login for UX speed.
+- **`notifications_enabled`**: Persistent user toggle for stock alerts.
+
+## 🔒 Security Considerations
+
+StockLite prioritizes data integrity and privacy through several layers of security:
+
+- **Authentication**: All users must be authenticated via Firebase Auth (Email/Password) before accessing any inventory data.
+- **Data Isolation**: Each product document contains an `ownerId`. The service layer strictly filters queries by the current user's UID to prevent cross-tenant data leaks.
+- **Real-time Rules**: Firestore Security Rules enforce that users can only read/write documents where the `ownerId` matches their `request.auth.uid`.
+- **Validation**: Server-side checks ensure that stock levels cannot be negative and that mandatory fields (name, SKU) are present.
+
+## 🧪 Testing Strategy
+
+The project adheres to a rigorous testing methodology based on the **Test Pyramid Strategy**:
+
+### 1. Testing Levels
+- **Unit Testing**: Validates business logic in services (`AuthService`, `DatabaseService`) using `Mocktail` for dependency isolation.
+- **Widget Testing**: Ensures UI components (Login, Add Product, etc.) render correctly and handle user input.
+- **Integration Testing**: Verified E2E flows (Login -> Add Product -> Logout) on real devices and browsers (Chrome/Android).
+
+### 2. Design Techniques
+- **Boundary Value Analysis (BVA)**: Applied to password lengths (8-16 chars) and stock thresholds (0, 10).
+- **Equivalence Partitioning (EP)**: Used for email validation and password complexity.
+- **State Transition Testing**: Validates stock status changes (In Stock -> Low Stock -> Out of Stock).
+- **Decision Table Testing**: Ensures complex filtering logic in the product catalog works across all condition combinations.
+
+### 3. Requirements Traceability Matrix (RTM)
+| ID | Requirement | Test Type | Status |
+|----|-------------|-----------|--------|
+| **R1** | Authentication & Registration | Widget/Unit | ✅ PASS |
+| **R2** | Application Navigation | Integration | ✅ PASS |
+| **R3** | Cross-Platform Stability | Integration | ✅ PASS |
+| **R4** | Product CRUD & Stock Management | Widget/Unit | ✅ PASS |
 
 ## Getting Started
 
@@ -61,6 +146,15 @@ flutter test
 ```
 
 **2. Integration Tests (Web/Chrome):**
+
+We provide a helper script to automate the ChromeDriver management and test execution:
+
+```bash
+chmod +x run_web_test.sh
+./run_web_test.sh
+```
+
+Alternatively, you can run the steps manually:
 
 - **Step 0:** Kill all running Chrome and ChromeDriver processes:
   ```bash
