@@ -89,12 +89,23 @@ The project adheres to a rigorous testing methodology based on the **Test Pyrami
 - **Decision Table Testing**: Ensures complex filtering logic in the product catalog works across all condition combinations.
 
 ### 3. Requirements Traceability Matrix (RTM)
-| ID | Requirement | Test Type | Status |
-|----|-------------|-----------|--------|
-| **R1** | Authentication & Registration | Widget/Unit | ✅ PASS |
-| **R2** | Application Navigation | Integration | ✅ PASS |
-| **R3** | Cross-Platform Stability | Integration | ✅ PASS |
-| **R4** | Product CRUD & Stock Management | Widget/Unit | ✅ PASS |
+
+This matrix maps the core application requirements to the specific test scripts that validate them, ensuring 100% feature coverage.
+
+| Req ID | Feature / Requirement | Test Script | Test Level | Status |
+|--------|-----------------------|-------------|------------|--------|
+| **R1** | **User Authentication** | `login_screen_test.dart` | Widget | ✅ PASS |
+| **R1.1**| User Registration | `sign_up_screen_test.dart` | Widget | ✅ PASS |
+| **R1.2**| Auth Service Logic | `auth_service_test.dart` | Unit | ✅ PASS |
+| **R2** | **App Navigation Flow** | `demo_test.dart` | Integration | ✅ PASS |
+| **R3** | **Cross-Platform Stability**| `app_test.dart` | Integration | ✅ PASS |
+| **R4** | **Inventory Management** | `add_product_screen_test.dart` | Widget | ✅ PASS |
+| **R4.1**| Product Detail Updates | `product_detail_screen_test.dart`| Widget | ✅ PASS |
+| **R4.2**| Catalog Search & Filter | `home_screen_test.dart` | Widget | ✅ PASS |
+| **R4.3**| Data Persistence Logic | `database_service_test.dart` | Unit | ✅ PASS |
+
+> [!TIP]
+> Each test script employs academic black-box techniques (BVA, EP, etc.) as detailed in the Testing Strategy section above.
 
 ## Getting Started
 
