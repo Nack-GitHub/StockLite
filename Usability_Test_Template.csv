@@ -1,0 +1,25 @@
+User ID,Task Name,Trial #,Success (0/1),Time (Sec),Errors (Count),Notes (Bottlenecks)
+User_01,Registration,1,1,40,1,สับสนช่อง Confirm Password
+User_01,Add Product,1,1,25,0,-
+User_01,Add Product,2,1,15,0,เริ่มคุ้นเคยกับปุ่ม Add
+User_01,Add Product,3,1,10,0,ทำได้รวดเร็วมาก
+User_01,Search Product,1,1,12,0,-
+User_01,Update Stock,1,1,15,0,-
+User_02,Registration,1,1,55,2,ลืมใส่ @ ในช่องอีเมล
+User_02,Add Product,1,1,35,1,หาปุ่ม Save ไม่เจอในตอนแรก
+User_02,Add Product,2,1,20,0,-
+User_02,Add Product,3,1,15,0,-
+User_02,Search Product,1,1,20,1,พิมพ์ชื่อสินค้าผิด
+User_02,Update Stock,1,1,25,1,งงกับหน้าจอ Edit
+User_03,Registration,1,1,35,0,-
+User_03,Add Product,1,1,45,2,กรอกข้อมูลผิดช่อง (ใส่ชื่อในช่องราคา)
+User_03,Add Product,2,1,30,1,-
+User_03,Add Product,3,1,22,0,เรียนรู้ได้ดีขึ้น
+User_03,Search Product,1,1,25,1,-
+User_03,Update Stock,1,1,35,2,ลืมกดบันทึกหลังจากแก้ไข
+User_04,Registration,1,1,35,0,ใช้งานได้อย่างลื่นไหล
+User_04,Add Product,1,1,20,0,-
+User_04,Add Product,2,1,12,0,-
+User_04,Add Product,3,1,8,0,-
+User_04,Search Product,1,1,10,0,-
+User_04,Update Stock,1,1,12,0,-
